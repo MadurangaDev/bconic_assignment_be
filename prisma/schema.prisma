@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnumRole {
+  USER
+  ADMIN
+  // delivery person, staff etc in the future scalings
+}
+
+enum enumTrackingStatus {
+  PENDING_PICKUP
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  firstName    String     @map("first_name") @db.VarChar(60)
+  lastName     String     @map("last_name") @db.VarChar(70)
+  address      String     @db.VarChar(512)
+  city         String     @db.VarChar(100)
+  postalCode   String     @map("postal_code") @db.VarChar(5)
+  email        String     @unique @db.VarChar(100)
+  phone        String     @unique @db.VarChar(10)
+  NIC          String     @unique @map("nic") @db.VarChar(15)
+  role         EnumRole   @default(USER)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  Shipments    Shipment[]
+
+  @@map("users")
+}
+
+model Shipment {
+  id       Int @id @default(autoincrement())
+  clientId Int @map("user_id")
+
+  recipientName       String  @map("recipient_name") @db.VarChar(130)
+  recipientPhone      String  @map("recipient_phone") @db.VarChar(10)
+  recipientEmail      String? @map("recipient_email") @db.VarChar(100)
+  recipientCity       String  @map("recipient_city") @db.VarChar(100)
+  recipientPostalCode String  @map("recipient_postal_code") @db.VarChar(5)
+  recipientAddress    String  @map("recipient_address") @db.VarChar(512)
+
+  senderName          String             @map("sender_name") @db.VarChar(130)
+  senderPhone         String             @map("sender_phone") @db.VarChar(10)
+  senderAddress       String             @map("sender_address") @db.VarChar(512)
+  senderCity          String             @map("sender_city") @db.VarChar(100)
+  senderPostalCode    String             @map("sender_postal_code") @db.VarChar(5)
+  packageDescription  String             @map("package_description") @db.VarChar(255)
+  weight              Float              @db.DoublePrecision
+  dimensions          String             @db.VarChar(50) // e.g., "10x20x30"
+  specialInstructions String?            @map("special_instructions") @db.VarChar(512)
+  currentStatus       enumTrackingStatus @default(PENDING_PICKUP) @map("current_status")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  deliveryCharge Float   @map("delivery_charge") @db.DoublePrecision
+  paymentStatus  Boolean @default(false) @map("payment_status") // since requirement didn't say anything about payment handling, I didn't add any payment related fields like payment method, transaction id etc.
+
+  user            User              @relation(fields: [clientId], references: [id])
+  TrackingRecords TrackingHistory[]
+
+  @@map("shipments")
+}
+
+model TrackingHistory {
+  id         Int                @id @default(autoincrement())
+  shipmentId Int                @map("shipment_id")
+  status     enumTrackingStatus @default(PENDING_PICKUP)
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+
+  @@map("tracking_history")
+}

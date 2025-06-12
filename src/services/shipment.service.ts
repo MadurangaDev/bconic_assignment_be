@@ -1,0 +1,151 @@
+import { StatusCodes, TrackingStatus } from "@/types/enums";
+import { IShipmentFromDB } from "@/types/interfaces";
+import { ICreateShipmentDTO, IUpdateShipmentDTO } from "@requests";
+import { calculateShippingCost } from "@/utils";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export const createShipment = async (
+  shipmentData: ICreateShipmentDTO
+): Promise<IShipmentFromDB> => {
+  try {
+    const shipment = await prisma.shipment.create({
+      data: {
+        dimensions: shipmentData.dimensions,
+        packageDescription: shipmentData.packageDescription,
+        recipientAddress: shipmentData.recipientAddress,
+        recipientCity: shipmentData.recipientCity,
+        recipientName: shipmentData.recipientName,
+        recipientPhone: shipmentData.recipientPhone,
+        recipientPostalCode: shipmentData.recipientPostalCode,
+        senderAddress: shipmentData.senderAddress,
+        senderCity: shipmentData.senderCity,
+        senderName: shipmentData.senderName,
+        senderPhone: shipmentData.senderPhone,
+        senderPostalCode: shipmentData.senderPostalCode,
+        weight: shipmentData.weight,
+        recipientEmail: shipmentData.recipientEmail,
+        specialInstructions: shipmentData.specialInstructions,
+        deliveryCharge: calculateShippingCost({
+          weightKg: shipmentData.weight,
+          lengthCm: parseFloat(shipmentData.dimensions.split("x")[0]),
+          widthCm: parseFloat(shipmentData.dimensions.split("x")[1]),
+          heightCm: parseFloat(shipmentData.dimensions.split("x")[2]),
+        }),
+        currentStatus: TrackingStatus.PENDING_PICKUP,
+        paymentStatus: false,
+        user: {
+          connect: { id: 1 }, // Assuming user ID is 1 for now, replace with actual user ID
+        },
+        TrackingRecords: {
+          create: {
+            status: TrackingStatus.PENDING_PICKUP,
+          },
+        },
+      },
+    });
+    return {
+      ...shipment,
+      currentStatus: shipment.currentStatus as TrackingStatus,
+      recipientEmail: shipment.recipientEmail || undefined,
+      specialInstructions: shipment.specialInstructions || undefined,
+    };
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to create shipment",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};
+
+export const updateShipment = async (
+  shipmentData: IUpdateShipmentDTO & {
+    deliveryCharge?: number;
+  }
+): Promise<IShipmentFromDB> => {
+  try {
+    const shipment = await prisma.shipment.update({
+      where: { id: shipmentData.id },
+      data: {
+        dimensions: shipmentData.dimensions,
+        packageDescription: shipmentData.packageDescription,
+        recipientAddress: shipmentData.recipientAddress,
+        recipientCity: shipmentData.recipientCity,
+        recipientName: shipmentData.recipientName,
+        recipientPhone: shipmentData.recipientPhone,
+        recipientPostalCode: shipmentData.recipientPostalCode,
+        senderAddress: shipmentData.senderAddress,
+        senderCity: shipmentData.senderCity,
+        senderName: shipmentData.senderName,
+        senderPhone: shipmentData.senderPhone,
+        senderPostalCode: shipmentData.senderPostalCode,
+        weight: shipmentData.weight,
+        recipientEmail: shipmentData.recipientEmail,
+        specialInstructions: shipmentData.specialInstructions,
+        deliveryCharge: shipmentData.deliveryCharge,
+        currentStatus: shipmentData.currentStatus as TrackingStatus | undefined,
+        paymentStatus:
+          typeof shipmentData.paymentStatus === "boolean"
+            ? shipmentData.paymentStatus
+            : undefined,
+      },
+    });
+    return {
+      ...shipment,
+      currentStatus: shipment.currentStatus as TrackingStatus,
+      recipientEmail: shipment.recipientEmail || undefined,
+      specialInstructions: shipment.specialInstructions || undefined,
+    };
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to update shipment",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};
+
+export const getShipmentById = async (
+  id: number
+): Promise<IShipmentFromDB | null> => {
+  try {
+    const shipment = await prisma.shipment.findUnique({
+      where: { id },
+    });
+    if (!shipment) {
+      return null;
+    }
+    return {
+      ...shipment,
+      currentStatus: shipment.currentStatus as TrackingStatus,
+      recipientEmail: shipment.recipientEmail || undefined,
+      specialInstructions: shipment.specialInstructions || undefined,
+    };
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to retrieve shipment",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};
+
+export const getAllShipments = async (): Promise<IShipmentFromDB[]> => {
+  try {
+    const shipments = await prisma.shipment.findMany();
+    return shipments.map((shipment) => ({
+      ...shipment,
+      currentStatus: shipment.currentStatus as TrackingStatus,
+      recipientEmail: shipment.recipientEmail || undefined,
+      specialInstructions: shipment.specialInstructions || undefined,
+    }));
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to retrieve shipments",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};
