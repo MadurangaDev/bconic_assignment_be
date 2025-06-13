@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 // import { config } from "dotenv";
 
 import { StatusCodes, UserRole } from "@enums";
-import { createResponse, hashPassword } from "@utils";
+import { convertToToken, createResponse, hashPassword } from "@utils";
 import { ILoginRequestDTO, ILRegisterRequestDTO } from "@requests";
 import { login, registerUser } from "@/services";
 
@@ -15,8 +15,14 @@ export const handleLogin = async (req: Request, res: Response) => {
     const { email, password } = req.body as ILoginRequestDTO;
 
     const user = await login(email, password);
+    const token = convertToToken(user);
 
-    return createResponse(res, user, "Login success", StatusCodes.OK);
+    const preparedUser = {
+      ...user,
+      token,
+    };
+
+    return createResponse(res, preparedUser, "Login success", StatusCodes.OK);
   } catch (err) {
     return createResponse(
       res,
@@ -85,6 +91,13 @@ export const handleRegister = async (req: Request, res: Response) => {
       postalCode,
       role: UserRole.USER,
     });
+
+    const token = convertToToken(regUser);
+
+    const preparedUser = {
+      ...regUser,
+      token,
+    };
 
     return createResponse(
       res,
