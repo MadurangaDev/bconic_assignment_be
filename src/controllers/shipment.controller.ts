@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { StatusCodes } from "@enums";
+import { StatusCodes, UserRole } from "@enums";
 import { calculateShippingCost, createResponse } from "@utils";
 import { ICreateShipmentDTO, IUpdateShipmentDTO } from "@requests";
 import {
@@ -119,7 +119,10 @@ export const handleGetShipmentById = async (req: Request, res: Response) => {
 
 export const handleGetAllShipments = async (req: Request, res: Response) => {
   try {
-    const shipments = await getAllShipments();
+    const shipments =
+      req.user!.role === UserRole.ADMIN
+        ? await getAllShipments()
+        : await getAllShipments(req.user!.id);
     return createResponse(
       res,
       shipments,

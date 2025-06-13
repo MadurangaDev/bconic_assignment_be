@@ -4,7 +4,7 @@ import { config } from "dotenv";
 import { StatusCodes } from "@enums";
 
 config();
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const convertToToken = (value: any): string => {
   return jwt.sign(value, JWT_SECRET);

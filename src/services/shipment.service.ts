@@ -132,9 +132,14 @@ export const getShipmentById = async (
   }
 };
 
-export const getAllShipments = async (): Promise<IShipmentFromDB[]> => {
+export const getAllShipments = async (
+  userId?: number
+): Promise<IShipmentFromDB[]> => {
   try {
-    const shipments = await prisma.shipment.findMany();
+    const shipments = await prisma.shipment.findMany({
+      where: userId ? { user: { id: userId } } : {},
+      orderBy: { createdAt: "desc" },
+    });
     return shipments.map((shipment) => ({
       ...shipment,
       currentStatus: shipment.currentStatus as TrackingStatus,
