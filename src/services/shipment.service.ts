@@ -1,5 +1,5 @@
 import { StatusCodes, TrackingStatus } from "@/types/enums";
-import { IShipmentFromDB } from "@/types/interfaces";
+import { IShipmentFromDB, IShipmentHistoryFromDB } from "@/types/interfaces";
 import { ICreateShipmentDTO, IUpdateShipmentDTO } from "@requests";
 import { calculateShippingCost } from "@/utils";
 import { PrismaClient } from "@prisma/client";
@@ -144,6 +144,27 @@ export const getAllShipments = async (): Promise<IShipmentFromDB[]> => {
   } catch (err) {
     throw {
       message: (err as Error).message || "Failed to retrieve shipments",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};
+
+export const getShipmentHistory = async (
+  shipmentId: number
+): Promise<IShipmentHistoryFromDB[]> => {
+  try {
+    const history = await prisma.trackingHistory.findMany({
+      where: { shipmentId },
+      orderBy: { createdAt: "desc" },
+    });
+    return history.map((record) => ({
+      ...record,
+      status: record.status as TrackingStatus,
+    }));
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to retrieve shipment history",
       code: ((err as any).code ??
         StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
     };

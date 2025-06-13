@@ -12,3 +12,14 @@ export interface IShipmentFromDB extends IShipment {
   updatedAt: Date;
   currentStatus: TrackingStatus;
 }
+
+export interface IShipmentHistory {
+  shipmentId: number;
+  status: TrackingStatus;
+}
+
+export interface IShipmentHistoryFromDB extends IShipmentHistory {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

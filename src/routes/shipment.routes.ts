@@ -5,6 +5,7 @@ import {
   handleUpdateShipment,
   handleGetAllShipments,
   handleGetDeliveryFee,
+  getTrackingHistory,
 } from "@controllers";
 import { validateRequestBody, validateRequestParams } from "@middlewares";
 import {
@@ -37,6 +38,11 @@ shipmentRoutes.post(
   "/calculate-fee",
   validateRequestBody(calculateShippingCostRequestSchema),
   handleGetDeliveryFee
+);
+shipmentRoutes.get(
+  "/:id/history",
+  validateRequestParams(updateShipmentParamsSchema),
+  getTrackingHistory
 );
 
 export { shipmentRoutes };

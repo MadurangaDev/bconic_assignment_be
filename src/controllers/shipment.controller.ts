@@ -8,6 +8,7 @@ import {
   getShipmentById,
   updateShipment,
   getAllShipments,
+  getShipmentHistory,
 } from "@services";
 import { ICalculateShippingCostDTO } from "@/types/interfaces/requests/shipment/calculate.request";
 
@@ -150,6 +151,39 @@ export const handleGetDeliveryFee = async (req: Request, res: Response) => {
       res,
       { deliveryFee },
       "Delivery fee calculated successfully",
+      StatusCodes.OK
+    );
+  } catch (err) {
+    return createResponse(
+      res,
+      null,
+      (err as Error).message || "Internal server error",
+      ((err as any).code ?? StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes
+    );
+  }
+};
+
+export const getTrackingHistory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const shipment = await getShipmentById(Number(id));
+    if (!shipment) {
+      throw {
+        message: "Shipment not found",
+        code: StatusCodes.NOT_FOUND,
+      };
+    }
+    const trackingHistory = await getShipmentHistory(Number(id));
+
+    const preparedHistory = {
+      ...shipment,
+      trackingHistory: trackingHistory,
+    };
+
+    return createResponse(
+      res,
+      preparedHistory,
+      "Tracking history retrieved successfully",
       StatusCodes.OK
     );
   } catch (err) {
