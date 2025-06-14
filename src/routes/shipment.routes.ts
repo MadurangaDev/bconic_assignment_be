@@ -60,8 +60,6 @@ shipmentRoutes.post(
 );
 shipmentRoutes.get(
   "/:id/history",
-  authenticateToken,
-  authorizeRoles(UserRole.USER, UserRole.ADMIN),
   validateRequestParams(updateShipmentParamsSchema),
   getTrackingHistory
 );
