@@ -46,7 +46,7 @@ shipmentRoutes.get(
 shipmentRoutes.patch(
   "/:id",
   authenticateToken,
-  authorizeRoles(UserRole.USER),
+  authorizeRoles(UserRole.ADMIN),
   validateRequestParams(updateShipmentParamsSchema),
   validateRequestBody(updateShipmentRequestSchema),
   handleUpdateShipment
