@@ -15,7 +15,11 @@ import { ICalculateShippingCostDTO } from "@/types/interfaces/requests/shipment/
 
 export const handleCreateShipment = async (req: Request, res: Response) => {
   try {
-    const newShipment = await createShipment(req.body as ICreateShipmentDTO);
+    const user = req.user!;
+    const newShipment = await createShipment(
+      req.body as ICreateShipmentDTO,
+      user.id
+    );
     return createResponse(
       res,
       newShipment,

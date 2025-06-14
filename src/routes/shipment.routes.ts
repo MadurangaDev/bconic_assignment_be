@@ -53,6 +53,8 @@ shipmentRoutes.patch(
 );
 shipmentRoutes.post(
   "/calculate-fee",
+  authenticateToken,
+  authorizeRoles(UserRole.USER),
   validateRequestBody(calculateShippingCostRequestSchema),
   handleGetDeliveryFee
 );

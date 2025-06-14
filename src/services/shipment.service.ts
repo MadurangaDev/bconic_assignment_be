@@ -7,7 +7,8 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createShipment = async (
-  shipmentData: ICreateShipmentDTO
+  shipmentData: ICreateShipmentDTO,
+  userId: number
 ): Promise<IShipmentFromDB> => {
   try {
     const shipment = await prisma.shipment.create({
@@ -36,7 +37,7 @@ export const createShipment = async (
         currentStatus: TrackingStatus.PENDING_PICKUP,
         paymentStatus: false,
         user: {
-          connect: { id: 1 }, // Assuming user ID is 1 for now, replace with actual user ID
+          connect: { id: userId },
         },
         TrackingRecords: {
           create: {
