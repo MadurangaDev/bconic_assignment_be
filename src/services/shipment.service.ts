@@ -175,3 +175,27 @@ export const getShipmentHistory = async (
     };
   }
 };
+
+export const addTrackingRecord = async (
+  shipmentId: number,
+  status: TrackingStatus
+): Promise<IShipmentHistoryFromDB> => {
+  try {
+    const record = await prisma.trackingHistory.create({
+      data: {
+        shipmentId,
+        status,
+      },
+    });
+    return {
+      ...record,
+      status: record.status as TrackingStatus,
+    };
+  } catch (err) {
+    throw {
+      message: (err as Error).message || "Failed to add tracking record",
+      code: ((err as any).code ??
+        StatusCodes.INTERNAL_SERVER_ERROR) as StatusCodes,
+    };
+  }
+};

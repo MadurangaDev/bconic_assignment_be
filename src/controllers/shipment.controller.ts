@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { StatusCodes, UserRole } from "@enums";
+import { StatusCodes, TrackingStatus, UserRole } from "@enums";
 import { calculateShippingCost, createResponse } from "@utils";
 import { ICreateShipmentDTO, IUpdateShipmentDTO } from "@requests";
 import {
@@ -9,6 +9,7 @@ import {
   updateShipment,
   getAllShipments,
   getShipmentHistory,
+  addTrackingRecord,
 } from "@services";
 import { ICalculateShippingCostDTO } from "@/types/interfaces/requests/shipment/calculate.request";
 
@@ -66,6 +67,13 @@ export const handleUpdateShipment = async (req: Request, res: Response) => {
           (reqBody.dimensions ?? oldShipment.dimensions).split("x")[2]
         ),
       });
+    }
+
+    if (reqBody.currentStatus) {
+      const insertedHistory = await addTrackingRecord(
+        Number(id),
+        reqBody.currentStatus as TrackingStatus
+      );
     }
 
     const updatedShipment = await updateShipment({
