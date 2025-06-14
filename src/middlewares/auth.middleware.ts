@@ -35,6 +35,8 @@ export const authenticateToken = async (
 
     const decoded = await verifyToken(token);
     if (decoded.status !== StatusCodes.OK) {
+      console.log("Token verification failed:", decoded.data);
+      console.log("Decoded token:", decoded.status);
       return createResponse(
         res,
         null,
@@ -47,24 +49,6 @@ export const authenticateToken = async (
 
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return createResponse(
-        res,
-        null,
-        "Invalid token.",
-        StatusCodes.UNAUTHORIZED
-      );
-    }
-
-    if (error instanceof jwt.TokenExpiredError) {
-      return createResponse(
-        res,
-        null,
-        "Token expired.",
-        StatusCodes.UNAUTHORIZED
-      );
-    }
-
     return createResponse(
       res,
       null,
